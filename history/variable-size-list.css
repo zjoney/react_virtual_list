@@ -2,15 +2,17 @@
   border: 1px solid gray;
 }
 
-.ListItmeOdd,
+.ListItemOdd,
 .ListItemEven {
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.ListItmeOdd{
-  background: rgb(154, 223, 145);
+
+.ListItemOdd {
+  background-color: lightcoral;
 }
-.ListItemEven{
-  background-color: rgb(241, 143, 143);
+
+.ListItemEven {
+  background-color: lightgreen;
 }
