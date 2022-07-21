@@ -8,6 +8,9 @@ function createListComponent({
   getStopIndexForStartIndex,//获取结束索引 
 }) {
   return class extends React.Component {
+    static defaultProps = {
+      overscanCount: 2
+    }
     state = { scrollOffset: 0 }
     render() {
       const { width, height, itemCount, children: ComponentType } = this.props;
@@ -30,27 +33,31 @@ function createListComponent({
         </div>
       )
     }
-    onScroll=(event)=>{
+    onScroll = (event) => {
       const { scrollTop } = event.currentTarget;
       this.setState({ scrollOffset: scrollTop });
     }
     getRangeToRender = () => {
       const { scrollOffset } = this.state;
+      const { itemCount, overscanCount } = this.props;
       const startIndex = getStartIndexForOffset(this.props, scrollOffset);
       const stopIndex = getStopIndexForStartIndex(this.props, startIndex);
-      return [startIndex, stopIndex];
-    
+      return [
+        Math.max(0, startIndex - overscanCount),
+        Math.min(itemCount - 1, stopIndex + overscanCount),
+        startIndex, stopIndex];
+
+    }
+    _getItemStyle = (index) => {
+      const style = {
+        position: 'absolute',
+        width: '100%',
+        height: getItemSize(this.props),
+        top: getItemOffset(this.props, index)
+      };
+      return style;
+    }
   }
-  _getItemStyle = (index) => {
-    const style = {
-      position: 'absolute',
-      width: '100%',
-      height: getItemSize(this.props),
-      top: getItemOffset(this.props, index)
-    };
-    return style;
-  }
-}
 }
 
 export default createListComponent;
