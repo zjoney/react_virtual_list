@@ -2,14 +2,23 @@ import CreateListComponent from "./createListComponent";
 
 
 const DEFAULT_ESTIMATED_SIZE = 50; //默认情况下
-const getEstimatedTotalSize = ({ itemCount }, { estimatedItemSize }) => {
-  const numUnmeasuredItems = itemCount;//未测量的条目  { itemCount }, { estimatedItemSize }
-  const totalSizeOfUnmeasuredItems = numUnmeasuredItems * estimatedItemSize;//未测量条目的总高度
-  return totalSizeOfUnmeasuredItems;
+const getEstimatedTotalSize = ({ itemCount }, { estimatedItemSize, itemMetadataMap, lastMeasuredIndex }) => {
+  
+  
+  let totalSizeOfMeasuredItems = 0;//测量条目的总高度
+  if (lastMeasuredIndex >= 0) {
+    const itemMetadata = itemMetadataMap[lastMeasuredIndex];
+    totalSizeOfMeasuredItems = itemMetadata.offset + itemMetadata.size;
+  }
+  const numUnMeasuredItems = itemCount - lastMeasuredIndex - 1;//未测试过的条目的数量;
+  const totalSizeOfUnmeasuredItems = numUnMeasuredItems * estimatedItemSize;//未测试过的条目的总高度
+  //总高度=测量过的高度+未测试过的高度
+  return totalSizeOfMeasuredItems + totalSizeOfUnmeasuredItems;
 }
 // 
-function findNearestItem(props, instanceProps, offset) {
-  const { lastMeasuredIndex } = instanceProps;
+function findNearestItem(props, instanceProps,offset ) {
+  const { lastMeasuredIndex, itemMetadataMap } = instanceProps;//后面如果lastMeasuredIndex如果有值的话
+ 
   for (let index = 0; index <= lastMeasuredIndex; index++) {
     const currentOffset = getItemMetadata(props, index, instanceProps).offset;
     // currentOffset=当前offset offset=当前向上卷起的高度
@@ -33,7 +42,7 @@ function getItemMetadata(props, index, instanceProps) {
     //计算从上一个条目到本次索引的offset和size
     for (let i = lastMeasuredIndex + 1; i <= index; i++) {
       let size = itemSize(i);
-      itemMetadataMap[i] = { offset, size };// 此条目对应的高度size和刚才计算的offset值放在数据中保存
+      itemMetadataMap[i] = {size, offset };// 此条目对应的高度size和刚才计算的offset值放在数据中保存
       offset += size;//下一个条目offset值=自己的offset值+自己高度size
     }
     instanceProps.lastMeasuredIndex = index;
@@ -42,9 +51,9 @@ function getItemMetadata(props, index, instanceProps) {
 }
 const VariableSizeList = CreateListComponent({
   getEstimatedTotalSize, //预计内容高度为每个条目的高度乘以条目数
-  getStartIndexForOffset: (props, offset, instanceProps) => findNearestItem(props, instanceProps, offset),//获取起始索引
+  getStartIndexForOffset: (props, offset, instanceProps) => findNearestItem(props, instanceProps,offset ),//获取起始索引
   getStopIndexForStartIndex: (props, startIndex, 
-    // scrollOffset, 
+    scrollOffset, 
     instanceProps) => {
     const { itemCount, height } = props;
     // 获取开始索引对应的元数据

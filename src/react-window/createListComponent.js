@@ -49,7 +49,7 @@ function createListComponent({
       const { scrollOffset } = this.state;
       const { itemCount, overscanCount } = this.props;
       const startIndex = getStartIndexForOffset(this.props, scrollOffset,this.instanceProps);
-      const stopIndex = getStopIndexForStartIndex(this.props, startIndex,this.instanceProps);
+      const stopIndex = getStopIndexForStartIndex(this.props, startIndex,scrollOffset,this.instanceProps);
       return [
         Math.max(0, startIndex - overscanCount),
         Math.min(itemCount - 1, stopIndex + overscanCount),
