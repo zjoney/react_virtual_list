@@ -13,6 +13,7 @@ function createListComponent({
       super(props)
       this.instanceProps = initInstanceProps && initInstanceProps(this.props)
       this.state = { scrollOffset: 0 }
+      this.itemStyleCache = new Map()
     }
     // 等同于上面constructor内容
     // instanceProps = initInstanceProps && initInstanceProps(this.props)
@@ -48,8 +49,8 @@ function createListComponent({
     getRangeToRender = () => {
       const { scrollOffset } = this.state;
       const { itemCount, overscanCount } = this.props;
-      const startIndex = getStartIndexForOffset(this.props, scrollOffset,this.instanceProps);
-      const stopIndex = getStopIndexForStartIndex(this.props, startIndex,scrollOffset,this.instanceProps);
+      const startIndex = getStartIndexForOffset(this.props, scrollOffset, this.instanceProps);
+      const stopIndex = getStopIndexForStartIndex(this.props, startIndex, scrollOffset, this.instanceProps);
       return [
         Math.max(0, startIndex - overscanCount),
         Math.min(itemCount - 1, stopIndex + overscanCount),
@@ -57,12 +58,18 @@ function createListComponent({
 
     }
     _getItemStyle = (index) => {
-      const style = {
-        position: 'absolute',
-        width: '100%',
-        height: getItemSize(this.props, index, this.instanceProps),
-        top: getItemOffset(this.props, index, this.instanceProps)
-      };
+      let style;
+      if (this.itemStyleCache.has(index)) {
+        style = this.itemStyleCache.get(index);
+      } else {
+        style = {
+          position: 'absolute',
+          width: '100%',
+          height: getItemSize(this.props, index, this.instanceProps),
+          top: getItemOffset(this.props, index, this.instanceProps)
+        };
+        this.itemStyleCache.set(index, style);
+      }
       return style;
     }
   }

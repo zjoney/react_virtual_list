@@ -18,44 +18,19 @@ const getEstimatedTotalSize = ({ itemCount }, { estimatedItemSize, itemMetadataM
 }
 // 
 function findNearestItem(props, instanceProps, offset) {
-  // start
+  
   const { lastMeasuredIndex, itemMetadataMap } = instanceProps;//后面如果lastMeasuredIndex如果有值的话
-  // 源码里使用的是二分查找法时间复杂度从n降低为logN
-  return findNearestItemBinarySearch(props, instanceProps, lastMeasuredIndex, 0, offset);
 
-  // end
-  // const { lastMeasuredIndex, itemMetadataMap } = instanceProps;//后面如果lastMeasuredIndex如果有值的话
-
-  // for (let index = 0; index <= lastMeasuredIndex; index++) {
-  //   const currentOffset = getItemMetadata(props, index, instanceProps).offset;
-  //   // currentOffset=当前offset offset=当前向上卷起的高度
-  //   if (currentOffset >= offset) {
-  //     return index;
-  //   }
-  // }
-  // return 0;
-}
-// start
-function findNearestItemBinarySearch(props, instanceProps, high, low, offset) {
-  // low=0 hight=1000 middle = 500
-  while (low <= high) {
-    const middle = low + Math.floor(((high - low) / 2));
-    const currentOffset = getItemMetadata(props, middle, instanceProps).offset;
-    if (currentOffset === offset) {
-      return middle;
-    } else if (currentOffset < offset) {
-      low = middle + 1;
-    } else if (currentOffset > offset) {
-      high = middle - 1;
+  for (let index = 0; index <= lastMeasuredIndex; index++) {
+    const currentOffset = getItemMetadata(props, index, instanceProps).offset;
+    // currentOffset=当前offset offset=当前向上卷起的高度
+    if (currentOffset >= offset) {
+      return index;
     }
   }
-  if (low > 0) {
-    return low - 1;
-  } else {
-    return 0;
-  }
+  return 0;
 }
-// end
+
 // 获取每个条目对应的元数据 index=>{size, offset}
 function getItemMetadata(props, index, instanceProps) {
   const { itemSize } = props;
