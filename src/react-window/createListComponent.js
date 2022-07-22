@@ -13,37 +13,74 @@ function createListComponent({
       super(props)
       this.instanceProps = initInstanceProps && initInstanceProps(this.props)
       this.state = { scrollOffset: 0 }
-      this.itemStyleCache = new Map()
+      this.itemStyleCache = new Map();
+      this.outerRef = React.createRef()
+      this.oldFirstRef = React.createRef()
+      this.oldLastRef = React.createRef()
+      this.firstRef = React.createRef()
+      this.lastRef = React.createRef()
     }
     // 等同于上面constructor内容
     // instanceProps = initInstanceProps && initInstanceProps(this.props)
     static defaultProps = {
       overscanCount: 2
     }
-
+    componentDidMount() {
+      this.observe(this.oldFirstRef.current = this.firstRef.current)
+      this.observe(this.oldLastRef.current = this.lastRef.current);
+    }
+    componentDidUpdate() {
+      if (this.oldFirstRef.current !== this.firstRef.current) {
+        this.oldFirstRef.current = this.firstRef.current;
+        this.observe(this.firstRef.current);
+      }
+      if (this.oldLastRef.current !== this.lastRef.current) {
+        this.oldLastRef.current = this.lastRef.current;
+        this.observe(this.lastRef.current);
+      }
+    }
+    observe = (dom) => {
+      let io = new IntersectionObserver((entries) => {
+        entries.forEach(this.onScroll);
+      }, { root: this.outerRef.current })
+      io.observe(dom);
+    }
     render() {
-      const { width, height, itemCount, children: ComponentType } = this.props;
+      const { width, height, itemCount, children: Row } = this.props;
       const containerStyle = { position: 'relative', width, height, overflow: 'auto', willChange: 'transform' }
       const contentStyle = { height: getEstimatedTotalSize(this.props, this.instanceProps), width: '100%' };
       const items = [];
       if (itemCount > 0) {
-        const [startIndex, stopIndex] = this.getRangeToRender()
+        const [startIndex, stopIndex, originStartIndex, originStopIndex] = this.getRangeToRender()
         for (let index = startIndex; index <= stopIndex; index++) {
-          items.push(
-            <ComponentType key={index} index={index} style={this._getItemStyle(index)} />
-          );
+          if (index === originStartIndex) {
+            items.push(
+              <Row key={index} index={index} style={this._getItemStyle(index)} forwardRef={this.firstRef} />
+            );
+            continue;
+          } else if (index === originStopIndex) {
+            items.push(
+              <Row key={index} index={index} style={this._getItemStyle(index)} forwardRef={this.lastRef} />
+            );
+            continue;
+          } else {
+            items.push(
+              <Row key={index} index={index} style={this._getItemStyle(index)} />
+            );
+          }
+
         }
       }
       return (
-        <div style={containerStyle} onScroll={this.onScroll}>
+        <div style={containerStyle} ref={this.outerRef}>
           <div style={contentStyle}>
             {items}
           </div>
         </div>
       )
     }
-    onScroll = (event) => {
-      const { scrollTop } = event.currentTarget;
+    onScroll = () => {
+      const { scrollTop } = this.outerRef.current;
       this.setState({ scrollOffset: scrollTop });
     }
     getRangeToRender = () => {

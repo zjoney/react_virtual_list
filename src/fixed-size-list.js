@@ -1,8 +1,8 @@
 import { FixedSizeList } from "./react-window";
 import './fixed-size-list.css'
 
-const Row = ({ index, style }) => {
-  return <div className={index % 2 ? 'ListItmeOdd' : 'ListItemEven'} style={style}>
+const Row = ({ index, style, forwardRef }) => {
+  return <div className={index % 2 ? 'ListItmeOdd' : 'ListItemEven'} style={style} ref={forwardRef}>
     Row {index}
   </div>
 }
