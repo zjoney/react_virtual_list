@@ -5,15 +5,15 @@ const DEFAULT_ESTIMATED_SIZE = 50; //默认情况下
 const getEstimatedTotalSize = ({ itemCount }, { estimatedItemSize, itemMetadataMap, lastMeasuredIndex }) => {
   
   
-  let totalSizeOfMeasuredItems = 0;//测量条目的总高度
-  if (lastMeasuredIndex >= 0) {
-    const itemMetadata = itemMetadataMap[lastMeasuredIndex];
-    totalSizeOfMeasuredItems = itemMetadata.offset + itemMetadata.size;
-  }
-  const numUnMeasuredItems = itemCount - lastMeasuredIndex - 1;//未测试过的条目的数量;
+  // let totalSizeOfMeasuredItems = 0;//测量条目的总高度
+  // if (lastMeasuredIndex >= 0) {
+  //   const itemMetadata = itemMetadataMap[lastMeasuredIndex];
+  //   totalSizeOfMeasuredItems = itemMetadata.offset + itemMetadata.size;
+  // }
+  const numUnMeasuredItems = itemCount ;//未测试过的条目的数量;
   const totalSizeOfUnmeasuredItems = numUnMeasuredItems * estimatedItemSize;//未测试过的条目的总高度
   //总高度=测量过的高度+未测试过的高度
-  return totalSizeOfMeasuredItems + totalSizeOfUnmeasuredItems;
+  return totalSizeOfUnmeasuredItems;
 }
 // 
 function findNearestItem(props, instanceProps,offset ) {
@@ -70,7 +70,6 @@ const VariableSizeList = CreateListComponent({
   },
   getItemSize: (props, index, instanceProps) => getItemMetadata(props, index, instanceProps).size,//条目的高度
   getItemOffset: (props, index, instanceProps) => getItemMetadata(props, index, instanceProps).offset,//获取每个条目的偏移量
-
   initInstanceProps: (props) => {
     const { estimatedItemSize } = props;//先从属性要获取预估预计的条目高度
     const instanceProps = {

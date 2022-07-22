@@ -60,7 +60,7 @@ function createListComponent({
       const style = {
         position: 'absolute',
         width: '100%',
-        height: getItemSize(this.props, this.instanceProps),
+        height: getItemSize(this.props, index, this.instanceProps),
         top: getItemOffset(this.props, index, this.instanceProps)
       };
       return style;
