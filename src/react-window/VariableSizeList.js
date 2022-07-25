@@ -83,7 +83,7 @@ function getItemMetadata(props, index, instanceProps) {
     }
     //计算从上一个条目到本次索引的offset和size
     for (let i = lastMeasuredIndex + 1; i <= index; i++) {
-      let size = itemSize(i);
+      let size = itemSize ? itemSize(i) : DEFAULT_ESTIMATED_SIZE;
       itemMetadataMap[i] = { size, offset };// 此条目对应的高度size和刚才计算的offset值放在数据中保存
       offset += size;//下一个条目offset值=自己的offset值+自己高度size
     }

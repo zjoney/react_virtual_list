@@ -1,5 +1,32 @@
 import React from "react";
 
+class ListItem extends React.Component {
+  constructor(props) {
+    super(props);
+    this.domRef = React.createRef();
+    this.resizeObserver = null; //大小观察器
+  }
+  componentDidMount() {
+    if (this.domRef.current) {
+      const domNode = this.domRef.current.firstChild;
+      const { index, onSizeChange } = this.props;
+      this.resizeObserver = new ResizeObserver(() => {
+        onSizeChange(index, domNode);
+      });
+      this.resizeObserver.observe(domNode)
+    }
+  }
+  render() {
+    const { index, style, ComponentType } = this.props;
+    return (
+      <div style={style} ref={this.domRef}>
+        <ComponentType index={index} />
+      </div>
+    )
+
+  }
+}
+
 function createListComponent({
   getEstimatedTotalSize, //获取预计的总高度
   getItemSize,//每个条目的高度
@@ -40,39 +67,79 @@ function createListComponent({
       }
     }
     observe = (dom) => {
-      let io = new IntersectionObserver((entries) => {
-        entries.forEach(this.onScroll);
-      }, { root: this.outerRef.current })
+      let io = new IntersectionObserver(this.onScroll, { root: this.outerRef.current })
+      // let io = new IntersectionObserver((entries) => {
+      //   entries.forEach(this.onScroll);
+      // }, { root: this.outerRef.current })
       io.observe(dom);
     }
+    onSizeChange = (index, domNode) => {
+      const height = domNode.offsetHeight;
+      const { itemMetadataMap, lastMeasuredIndex } = this.instanceProps;
+      const itemMetadata = itemMetadataMap[index];
+      itemMetadata.size = height;
+      let offset = 0;
+      for (let i = 0; i < lastMeasuredIndex; i++) {
+        const itemMetadata = itemMetadataMap[i];
+        itemMetadata.offset = offset;
+        offset = offset + itemMetadata.size;
+      }
+      this.itemStyleCache.clear();
+      this.forceUpdate();
+    }
     render() {
-      const { width, height, itemCount, children: Row } = this.props;
+      const { width, height, itemCount, children: ComponentType, isDynamic } = this.props;
       const containerStyle = { position: 'relative', width, height, overflow: 'auto', willChange: 'transform' }
       const contentStyle = { height: getEstimatedTotalSize(this.props, this.instanceProps), width: '100%' };
       const items = [];
       if (itemCount > 0) {
         const [startIndex, stopIndex, originStartIndex, originStopIndex] = this.getRangeToRender()
         for (let index = startIndex; index <= stopIndex; index++) {
-          if (index === originStartIndex) {
-            items.push(
-              <Row key={index} index={index} style={this._getItemStyle(index)} forwardRef={this.firstRef} />
-            );
-            continue;
-          } else if (index === originStopIndex) {
-            items.push(
-              <Row key={index} index={index} style={this._getItemStyle(index)} forwardRef={this.lastRef} />
-            );
-            continue;
+          if (isDynamic) {// 如果需要动态
+            // start
+            let style = this._getItemStyle(index);
+            if (index === originStartIndex) {
+              items.push(<span key={'span' + index} ref={this.firstRef} style={{ ...style, width: 0, height: 0 }}></span>)
+              items.push(
+                <ListItem key={index} index={index} style={style}
+                  ComponentType={ComponentType}
+                  onSizeChange={this.onSizeChange}
+                />
+              );
+            } else if (index === originStopIndex) {
+              items.push(<span key={'span' + index} ref={this.lastRef} style={{ ...style, width: 0, height: 0 }}></span>)
+              items.push(
+                <ListItem key={index} index={index} style={style}
+                  ComponentType={ComponentType} onSizeChange={this.onSizeChange} />
+              );
+            } else {
+              items.push(
+                <ListItem key={index} index={index} style={style}
+                  ComponentType={ComponentType} onSizeChange={this.onSizeChange} />
+              );
+            }
+            // end
           } else {
-            items.push(
-              <Row key={index} index={index} style={this._getItemStyle(index)} />
-            );
+            if (index === originStartIndex) {
+              items.push(
+                <ComponentType key={index} index={index} style={this._getItemStyle(index)} forwardRef={this.firstRef} />
+              );
+              continue;
+            } else if (index === originStopIndex) {
+              items.push(
+                <ComponentType key={index} index={index} style={this._getItemStyle(index)} forwardRef={this.lastRef} />
+              );
+              continue;
+            } else {
+              items.push(
+                <ComponentType key={index} index={index} style={this._getItemStyle(index)} />
+              );
+            }
           }
-
         }
       }
       return (
-        <div style={containerStyle} ref={this.outerRef}>
+        <div style={containerStyle} ref={this.outerRef} >
           <div style={contentStyle}>
             {items}
           </div>
