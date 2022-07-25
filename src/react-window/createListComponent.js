@@ -1,5 +1,5 @@
 import React from "react";
-const IS_SCROLLING_DEBOUNCE_INTERVAL  = 150
+const IS_SCROLLING_DEBOUNCE_INTERVAL = 150
 class ListItem extends React.Component {
   constructor(props) {
     super(props);
@@ -17,7 +17,7 @@ class ListItem extends React.Component {
     }
   }
   componentWillUnmount() {
-    if(this.resizeObserver && this.domRef.current.firstChild){
+    if (this.resizeObserver && this.domRef.current.firstChild) {
       this.resizeObserver.unobserve(this.domRef.current.firstChild)
     }
   }
@@ -39,12 +39,13 @@ function createListComponent({
   getStartIndexForOffset, // 根据向上卷起的高度计算开始索引
   getStopIndexForStartIndex,//获取结束索引 
   initInstanceProps,
+  getOffsetForIndex
 }) {
   return class extends React.Component {
     constructor(props) {
       super(props)
       this.instanceProps = initInstanceProps && initInstanceProps(this.props)
-      this.state = { scrollOffset: 0 , isScrolling: false}
+      this.state = { scrollOffset: 0, isScrolling: false }
       this.itemStyleCache = new Map();
       this.outerRef = React.createRef()
       this.oldFirstRef = React.createRef()
@@ -93,8 +94,22 @@ function createListComponent({
       this.itemStyleCache.clear();
       this.forceUpdate();
     }
+    scrollToItem = (index) => {
+      const { itemCount } = this.props;
+      index = Math.max(0, Math.min(index, itemCount - 1));
+      this.scrollTo(
+        getOffsetForIndex(this.props, index)
+      )
+    }
+    scrollTo =(scrollOffset)=>{
+      this.setState({scrollOffset})
+    }
+    componentDidUpdate(){
+      const { scrollOffset } = this.state;
+      this.outerRef.current.scrollTop = scrollOffset
+    }
     render() {
-      const { width, height, itemCount, children: ComponentType, isDynamic , useIsScrolling} = this.props;
+      const { width, height, itemCount, children: ComponentType, isDynamic, useIsScrolling } = this.props;
       const containerStyle = { position: 'relative', width, height, overflow: 'auto', willChange: 'transform' }
       const contentStyle = { height: getEstimatedTotalSize(this.props, this.instanceProps), width: '100%' };
       const items = [];
@@ -107,9 +122,9 @@ function createListComponent({
             let style = this._getItemStyle(index);
             items.push(
               <ListItem key={index} index={index} style={style}
-                ComponentType={ComponentType} onSizeChange={this.onSizeChange} 
+                ComponentType={ComponentType} onSizeChange={this.onSizeChange}
                 isScrolling={useIsScrolling && isScrolling}
-                />
+              />
             );
             // if (index === originStartIndex) {
             //   items.push(<span key={'span' + index} ref={this.firstRef} style={{ ...style, width: 0, height: 0 }}></span>)
@@ -135,8 +150,8 @@ function createListComponent({
           } else {
             let style = this._getItemStyle(index);
             items.push(
-              <ComponentType key={index} index={index} style={style} 
-              isScrolling={useIsScrolling && isScrolling}
+              <ComponentType key={index} index={index} style={style}
+                isScrolling={useIsScrolling && isScrolling}
               />
             )
 
@@ -171,24 +186,24 @@ function createListComponent({
       const { scrollTop } = this.outerRef.current;
       this.setState({ scrollOffset: scrollTop, isScrolling: true }, this._resetIsScrollingDebounced);
     }
-  
+
     _resetIsScrollingDebounced = () => {
       if (this._resetIsScrollingTimeoutId) {
-          // cancelTimeout(this._resetIsScrollingTimeoutId);
-          clearTimeout(this._resetIsScrollingTimeoutId)
+        // cancelTimeout(this._resetIsScrollingTimeoutId);
+        clearTimeout(this._resetIsScrollingTimeoutId)
       }
       // requestTimeout(
       //     this._resetIsScrolling,
       //     IS_SCROLLING_DEBOUNCE_INTERVAL
       // );
-      this._resetIsScrollingTimeoutId = setTimeout(()=>this.setState({
+      this._resetIsScrollingTimeoutId = setTimeout(() => this.setState({
         isScrolling: false
       }), IS_SCROLLING_DEBOUNCE_INTERVAL)
-  };
-  _resetIsScrolling = () => {
+    };
+    _resetIsScrolling = () => {
       this._resetIsScrollingTimeoutId = null;
       this.setState({ isScrolling: false });
-  }
+    }
     getRangeToRender = () => {
       const { scrollOffset } = this.state;
       const { itemCount, overscanCount } = this.props;
