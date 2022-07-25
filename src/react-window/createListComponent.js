@@ -16,6 +16,11 @@ class ListItem extends React.Component {
       this.resizeObserver.observe(domNode)
     }
   }
+  componentWillUnmount() {
+    if(this.resizeObserver && this.domRef.current.firstChild){
+      this.resizeObserver.unobserve(this.domRef.current.firstChild)
+    }
+  }
   render() {
     const { index, style, ComponentType } = this.props;
     return (
@@ -53,8 +58,8 @@ function createListComponent({
       overscanCount: 2
     }
     componentDidMount() {
-      this.observe(this.oldFirstRef.current = this.firstRef.current)
-      this.observe(this.oldLastRef.current = this.lastRef.current);
+      // this.observe(this.oldFirstRef.current = this.firstRef.current)
+      // this.observe(this.oldLastRef.current = this.lastRef.current);
     }
     componentDidUpdate() {
       if (this.oldFirstRef.current !== this.firstRef.current) {
@@ -67,11 +72,11 @@ function createListComponent({
       }
     }
     observe = (dom) => {
-      let io = new IntersectionObserver(this.onScroll, { root: this.outerRef.current })
+      // let io = new IntersectionObserver(this.onScroll, { root: this.outerRef.current })
       // let io = new IntersectionObserver((entries) => {
       //   entries.forEach(this.onScroll);
       // }, { root: this.outerRef.current })
-      io.observe(dom);
+      // io.observe(dom);
     }
     onSizeChange = (index, domNode) => {
       const height = domNode.offsetHeight;
@@ -79,7 +84,7 @@ function createListComponent({
       const itemMetadata = itemMetadataMap[index];
       itemMetadata.size = height;
       let offset = 0;
-      for (let i = 0; i < lastMeasuredIndex; i++) {
+      for (let i = 0; i <= lastMeasuredIndex; i++) {
         const itemMetadata = itemMetadataMap[i];
         itemMetadata.offset = offset;
         offset = offset + itemMetadata.size;
@@ -98,48 +103,58 @@ function createListComponent({
           if (isDynamic) {// 如果需要动态
             // start
             let style = this._getItemStyle(index);
-            if (index === originStartIndex) {
-              items.push(<span key={'span' + index} ref={this.firstRef} style={{ ...style, width: 0, height: 0 }}></span>)
-              items.push(
-                <ListItem key={index} index={index} style={style}
-                  ComponentType={ComponentType}
-                  onSizeChange={this.onSizeChange}
-                />
-              );
-            } else if (index === originStopIndex) {
-              items.push(<span key={'span' + index} ref={this.lastRef} style={{ ...style, width: 0, height: 0 }}></span>)
-              items.push(
-                <ListItem key={index} index={index} style={style}
-                  ComponentType={ComponentType} onSizeChange={this.onSizeChange} />
-              );
-            } else {
-              items.push(
-                <ListItem key={index} index={index} style={style}
-                  ComponentType={ComponentType} onSizeChange={this.onSizeChange} />
-              );
-            }
+            items.push(
+              <ListItem key={index} index={index} style={style}
+                ComponentType={ComponentType} onSizeChange={this.onSizeChange} />
+            );
+            // if (index === originStartIndex) {
+            //   items.push(<span key={'span' + index} ref={this.firstRef} style={{ ...style, width: 0, height: 0 }}></span>)
+            //   items.push(
+            //     <ListItem key={index} index={index} style={style}
+            //       ComponentType={ComponentType}
+            //       onSizeChange={this.onSizeChange}
+            //     />
+            //   );
+            // } else if (index === originStopIndex) {
+            //   items.push(<span key={'span' + index} ref={this.lastRef} style={{ ...style, width: 0, height: 0 }}></span>)
+            //   items.push(
+            //     <ListItem key={index} index={index} style={style}
+            //       ComponentType={ComponentType} onSizeChange={this.onSizeChange} />
+            //   );
+            // } else {
+            //   items.push(
+            //     <ListItem key={index} index={index} style={style}
+            //       ComponentType={ComponentType} onSizeChange={this.onSizeChange} />
+            //   );
+            // }
             // end
           } else {
-            if (index === originStartIndex) {
-              items.push(
-                <ComponentType key={index} index={index} style={this._getItemStyle(index)} forwardRef={this.firstRef} />
-              );
-              continue;
-            } else if (index === originStopIndex) {
-              items.push(
-                <ComponentType key={index} index={index} style={this._getItemStyle(index)} forwardRef={this.lastRef} />
-              );
-              continue;
-            } else {
-              items.push(
-                <ComponentType key={index} index={index} style={this._getItemStyle(index)} />
-              );
-            }
+            let style = this._getItemStyle(index);
+            items.push(
+              <ComponentType key={index} index={index} style={style} />
+            )
+
+            //   );
+            // if (index === originStartIndex) {
+            //   items.push(
+            //     <ComponentType key={index} index={index} style={style} forwardRef={this.firstRef} />
+            //   );
+            //   continue;
+            // } else if (index === originStopIndex) {
+            //   items.push(
+            //     <ComponentType key={index} index={index} style={style} forwardRef={this.lastRef} />
+            //   );
+            //   continue;
+            // } else {
+            //   items.push(
+            //     <ComponentType key={index} index={index} style={style} />
+            //   );
+            // }
           }
         }
       }
       return (
-        <div style={containerStyle} ref={this.outerRef} >
+        <div style={containerStyle} ref={this.outerRef} onScroll={this.onScroll}>
           <div style={contentStyle}>
             {items}
           </div>
