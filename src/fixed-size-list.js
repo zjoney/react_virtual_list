@@ -15,7 +15,7 @@ const listRef = React.createRef();
     <FixedSizeList
       className="List"
       height={200}
-      width={200}
+      width={800}
       itemSize={50}
       itemCount={1000}
       useIsScrolling
